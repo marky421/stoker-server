@@ -27,6 +27,7 @@ var stokerUrl      = 'http://10.0.1.11';
 var fireSensorName = 'Fire';
 var meatSensorName = 'Meat';
 var logPath        = '/Users/maspain/Desktop/test/log.csv';
+var logInterval    = 5000;
 
 
 
@@ -40,7 +41,7 @@ router.get('/', function(req, res) {
 
 // route to get the current temperatures
 router.get('/status', function(req, res) {
-  util.getTemperatures(stokerUrl, fireSensorName, meatSensorName, function(err, json) {
+  util.getData(stokerUrl, fireSensorName, meatSensorName, function(err, json) {
     if (!err) res.json(json);
   });
 });
@@ -60,13 +61,12 @@ exports = module.exports = app;
 
 
 setInterval(function() {
-  util.getTemperatures(stokerUrl, fireSensorName, meatSensorName, function(err, json) {
-    if (!err && typeof json !== 'undefined') {
-      console.log('updating log: ' + JSON.stringify(json));
+  util.getData(stokerUrl, fireSensorName, meatSensorName, function(err, res) {
+    if (!err && typeof res !== 'undefined') {
       var time = util.getFormattedTime(new Date());
-      util.updateLog(logPath, time, json.fireTemp, json.meatTemp);
+      util.updateLog(logPath, time, res.fireSensor.temps['current'], res.meatSensor.temps['current']);
     } else {
       console.log('can\'t update log');
     }
   });
-}, 5000);
+}, logInterval);

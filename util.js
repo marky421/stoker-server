@@ -3,30 +3,18 @@ var cheerio    = require('cheerio');
 var fs         = require('fs');
 var mkdirp     = require('mkdirp');
 var getDirName = require('path').dirname;
+var Sensor     = require('./sensor.js');
 
 module.exports = {
 
-  getTemperatures: function(url, fireSensorName, meatSensorName, callback) {
+  getData: function(url, fireSensorName, meatSensorName, callback) {
     request(url, (err, status, html) => {
-      var fireTemp, meatTemp;
-      var json = { fireTemp : '', meatTemp : ''};
-      
+      var json = {};
       if (!err) {
-        // cheerio essentially gives us jQuery functionality
         var $ = cheerio.load(html);
-
-        $('input[value=' + fireSensorName + ']').filter(function() {
-          fireTemp = $(this).parent().next('td').text();
-        });
-
-        $('input[value=' + meatSensorName + ']').filter(function() {
-          meatTemp = $(this).parent().next('td').text();
-        });
-
-        json.fireTemp = fireTemp;
-        json.meatTemp = meatTemp;
+        json.fireSensor = parse($, fireSensorName);
+        json.meatSensor = parse($, meatSensorName);
       }
-
       callback(err, json);
     });
   },
@@ -42,6 +30,7 @@ module.exports = {
 
       mkdirp(getDirName(path), (err) => {
         if (err) return console.log(err);
+        console.log(line);
         fs.appendFile(path, line);
       });
     });
@@ -66,4 +55,22 @@ module.exports = {
     return month + '/' + date + '/' + year + ' ' + hours + ':' + mins + ':' + secs;
   }
 
+}
+
+function parse($, sensorName) {
+  var sensor = {};
+  $('input[value=' + sensorName + ']').filter(function() {
+    var serialNumber = $(this).attr("name").substring(Sensor.prefixSerial.length);
+    sensor = new Sensor({
+      name: sensorName,
+      serial: serialNumber,
+      temps: {
+        current : $(this).parent().next('td').text(),
+        target  : $('input[name=' + Sensor.prefixTarget + serialNumber + ']').val(),
+        low     : $('input[name=' + Sensor.prefixLow    + serialNumber + ']').val(),
+        high    : $('input[name=' + Sensor.prefixHigh   + serialNumber + ']').val()
+      }
+    });
+  });
+  return sensor;
 }
