@@ -3,7 +3,7 @@
  * Author : Mark Spain
  * Date   : 6/25/16
  */
- 
+
 
 // BASE SETUP
 //--------------------------------------
@@ -12,6 +12,7 @@ var fs         = require('fs');
 var request    = require('request');
 var bodyParser = require('body-parser');
 var cheerio    = require('cheerio');
+var util       = require('./util.js');
 var app        = express();
 var router     = express.Router();
 
@@ -22,9 +23,11 @@ app.use(bodyParser.json());
 // set our port
 var port = process.env.port || 8080;
 
-var stokerUrl = 'http://10.0.1.11';
+var stokerUrl      = 'http://10.0.1.11';
 var fireSensorName = 'Fire';
 var meatSensorName = 'Meat';
+var logPath        = '/Users/maspain/Desktop/test/log.csv';
+
 
 
 // setup our routes
@@ -37,28 +40,8 @@ router.get('/', function(req, res) {
 
 // route to get the current temperatures
 router.get('/status', function(req, res) {
-  request(stokerUrl, function(err, status, html) {
-    if (!err) {
-      // cheerio essentially gives us jQuery functionality
-      var $ = cheerio.load(html);
-
-      var fireTemp, meatTemp;
-      var json = { fireTemp : "", meatTemp : ""};
-
-      $('input[value=' + fireSensorName + ']').filter(function() {
-        fireTemp = $(this).parent().next('td').text();
-      });
-
-      $('input[value=' + meatSensorName + ']').filter(function() {
-        meatTemp = $(this).parent().next('td').text();
-      });
-
-      json.fireTemp = fireTemp;
-      json.meatTemp = meatTemp;
-
-      console.log(json);
-      res.json(json);
-    }
+  util.getTemperatures(stokerUrl, fireSensorName, meatSensorName, function(err, json) {
+    if (!err) res.json(json);
   });
 });
 
@@ -74,3 +57,16 @@ app.use('/api', router);
 app.listen(port);
 console.log('Magic happens on port: ' + port);
 exports = module.exports = app;
+
+
+setInterval(function() {
+  util.getTemperatures(stokerUrl, fireSensorName, meatSensorName, function(err, json) {
+    if (!err && typeof json !== 'undefined') {
+      console.log('updating log: ' + JSON.stringify(json));
+      var time = util.getFormattedTime(new Date());
+      util.updateLog(logPath, time, json.fireTemp, json.meatTemp);
+    } else {
+      console.log('can\'t update log');
+    }
+  });
+}, 5000);
