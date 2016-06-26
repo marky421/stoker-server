@@ -1,0 +1,18 @@
+{
+  "name"         : "node-stoker-server",
+  "version"      : "0.0.1",
+  "license"      : "Apache-2.0",
+  "description"  : "Scrape le stoker",
+  "main"         : "server.js",
+  "author"       : "Mark Spain",
+  "repository"   : {
+    "type"       : "git",
+    "ur;"        : "https://github.com/marky421/stoker-server.git"
+  },
+  "dependencies" : {
+    "express"    : "latest",
+    "body-parser": "latest",
+    "request"    : "latest",
+    "cheerio"    : "latest"
+  }
+}
