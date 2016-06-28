@@ -8,12 +8,11 @@ var Sensor     = require('./sensor.js');
 module.exports = {
 
   getData: function(url, fireSensorName, meatSensorName, callback) {
-    request(url, (err, status, html) => {
+    request(url, (err, statusCode, html) => {
       var json = {};
       if (!err) {
-        var $ = cheerio.load(html);
-        json.fireSensor = parse($, fireSensorName);
-        json.meatSensor = parse($, meatSensorName);
+        json.fireSensor = parse(html, fireSensorName);
+        json.meatSensor = parse(html, meatSensorName);
       }
       callback(err, json);
     });
@@ -57,8 +56,9 @@ module.exports = {
 
 }
 
-function parse($, sensorName) {
+function parse(html, sensorName) {
   var sensor = {};
+  var $ = cheerio.load(html);
   $('input[value=' + sensorName + ']').filter(function() {
     var serialNumber = $(this).attr("name").substring(Sensor.prefixSerial.length);
     sensor = new Sensor({
