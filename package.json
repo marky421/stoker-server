@@ -7,7 +7,7 @@
   "author"       : "Mark Spain",
   "repository"   : {
     "type"       : "git",
-    "ur;"        : "https://github.com/marky421/stoker-server.git"
+    "url"        : "https://github.com/marky421/stoker-server.git"
   },
   "dependencies" : {
     "express"    : "latest",
