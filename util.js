@@ -31,7 +31,9 @@ module.exports = {
       mkdirp(getDirName(path), (err) => {
         if (err) return console.log(err);
         console.log(line);
-        fs.appendFile(path, line);
+        fs.appendFile(path, line, (err) => {
+          if (err) return console.log(err);
+        });
       });
     });
   },
